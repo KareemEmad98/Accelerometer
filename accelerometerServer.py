@@ -9,7 +9,6 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 import pandas as pd
-from plyer import accelerometer
 # shehab code
 array=[]
 count = 0
@@ -17,7 +16,7 @@ filenumber = 0;
 array=[]
 df = pd.DataFrame()
 x=0
-spath = "C:\\Users\\PC\\PycharmProjects\\task\\gestures-dataset"
+spath = "C:\\Users\\PC\\PycharmProjects\\task\\gestures-dataset\\U01"
 for dirName, subdirList, fileList in os.walk(spath, topdown=False):
    # print('Found directory: %s' % dirName)
     os.chdir(dirName)
@@ -28,15 +27,7 @@ for dirName, subdirList, fileList in os.walk(spath, topdown=False):
     if filenumber>20:
         filenumber=0
     for fname in fileList:
-        # if (count == 20):
-            # if (filenumber > 20):
-            #     filenumber = 19
-            # filenumber += 1
-            # count = 0
-            # break
 
-        # x+=1
-        # print(x)
         data = pd.read_csv(fname, sep=" ", header=None)
         data.columns = ["a", "b", "c", "x", "y", "z"]
         #data.rows = ['a']
@@ -52,12 +43,9 @@ for dirName, subdirList, fileList in os.walk(spath, topdown=False):
         df_out.columns = df_out.columns.map('{0[0]}_{0[1]}'.format)
         df_out.reset_index()
         count+=1
-        # df = df.append(data.iloc[:, 0:3])
-        #newd=df_out.loc[:,:'f_4']
-        #print(newd)
         df=df.append(df_out,sort=True)
-# df=df.fillna(0)
-# print(len(fileList))
+
+
 
 df=df.dropna(axis='columns')
 print(df)
@@ -71,10 +59,10 @@ serv.bind(('192.168.1.3', 8012))
 serv.listen(5)
 from_client=""
 counter=0
-frameNumber=10
+frameNumber=13
 while True:
     conn, addr = serv.accept()
-    # print('Gesture Sent')
+
 
 
     while True:
@@ -84,31 +72,31 @@ while True:
             break
         counter += 1
         from_client+=str(data)
-        # print(from_client)
-    # print(counter)
+
     if counter==frameNumber:
 
         from_client=from_client.replace('b',' ')
         from_client = from_client.replace("'", ' ')
         from_client = from_client.replace('"', ' ')
         from_client=from_client.split(',')
-        # x = np.array(from_client)
+
         del from_client[len(from_client)-1]
         # y = x.astype(np.float)
         print(len(from_client))
         #classification
-        # example = np.array(from_client)
-        # example = example.reshape(1, -1)
+
         ex=np.array(from_client)
         ex=ex.reshape(1,-1)
         prediction = knn.predict(ex)
         print('prediction: %s' % prediction)
-        # serv.sendto(prediction,)
+        conn.send(prediction)
+        print(conn)
         #End classification
         from_client=""
         prediction=""
         counter=0
 conn.close()
 print('client disconnected')
+
 
 

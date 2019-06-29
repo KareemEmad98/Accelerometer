@@ -11,42 +11,67 @@ from sklearn.metrics import accuracy_score
 import pandas as pd
 from plyer import accelerometer
 # shehab code
+array=[]
 count = 0
-filenumber = 1;
-array = []
+filenumber = 0;
+array=[]
 df = pd.DataFrame()
-df1 = pd.DataFrame()
-spath = "C:\Users\HP\PycharmProjects\untitled\gestures-dataset"
+x=0
+spath = "C:\\Users\\PC\\PycharmProjects\\task\\gestures-dataset"
 for dirName, subdirList, fileList in os.walk(spath, topdown=False):
-    # print('Found directory: %s' % dirName)
+   # print('Found directory: %s' % dirName)
     os.chdir(dirName)
+    # x+=1
+    # print(x)
+    filenumber+=1
+
+    if filenumber>20:
+        filenumber=0
     for fname in fileList:
-        # print fname
-        if (filenumber > 20):
-            filenumber = 1
-        data = pd.read_csv(fname, sep=" ", header=None, nrows=10)
-        data.columns = ["a", "b", "c", "d", "e", "f"]
-        # data.rows = ['a']
+        # if (count == 20):
+            # if (filenumber > 20):
+            #     filenumber = 19
+            # filenumber += 1
+            # count = 0
+            # break
+
+        # x+=1
+        # print(x)
+        data = pd.read_csv(fname, sep=" ", header=None)
+        data.columns = ["a", "b", "c", "x", "y", "z"]
+        #data.rows = ['a']
         del data['a']
         del data['b']
         del data['c']
+        # print(filenumber)
         myclass = filenumber
+        array.append(filenumber)
         data['class'] = myclass
-        filenumber += 1
-        df = df.append(data.iloc[:, 0:3])
-        # df1=df1.append(data['class'])
-        array = np.append(array, data['class'])
-        x_train, x_test, y_train, y_test = train_test_split(df, array, test_size=0.32, random_state=42)
-        knn = KNeighborsClassifier(n_neighbors=2)
-        knn.fit(x_train, y_train)
-        print("accuacy", knn.score(x_test, y_test))
+        # filenumber+=1
+        df_out = data.set_index(['class', data.groupby(['class']).cumcount() + 1]).unstack().sort_index(level=1, axis=1)
+        df_out.columns = df_out.columns.map('{0[0]}_{0[1]}'.format)
+        df_out.reset_index()
+        count+=1
+        # df = df.append(data.iloc[:, 0:3])
+        #newd=df_out.loc[:,:'f_4']
+        #print(newd)
+        df=df.append(df_out,sort=True)
+# df=df.fillna(0)
+# print(len(fileList))
+
+df=df.dropna(axis='columns')
+print(df)
+x_train,x_test,y_train,y_test=train_test_split(df,array,test_size=0.2,random_state=0)
+knn=KNeighborsClassifier(n_neighbors=7)
+knn.fit(x_train,y_train)
+print ("accuacy",knn.score(x_test,y_test))
 #end shehab code
 serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serv.bind(('192.168.1.3', 8012))
 serv.listen(5)
 from_client=""
 counter=0
-frameNumber=13
+frameNumber=10
 while True:
     conn, addr = serv.accept()
     # print('Gesture Sent')
@@ -72,18 +97,18 @@ while True:
         # y = x.astype(np.float)
         print(len(from_client))
         #classification
-        # df = df.fillna(0)
-        example = [[0.919373, -1.072602, 10.113108], [2.145205, -0.306458, 10.419566]]
-        prediction = knn.predict(example)
+        # example = np.array(from_client)
+        # example = example.reshape(1, -1)
+        ex=np.array(from_client)
+        ex=ex.reshape(1,-1)
+        prediction = knn.predict(ex)
         print('prediction: %s' % prediction)
-        
-        # print(from_client)
+        # serv.sendto(prediction,)
         #End classification
         from_client=""
         prediction=""
         counter=0
 conn.close()
 print('client disconnected')
-
 
 
